@@ -23,7 +23,11 @@ get_gee <- function(region, shape = "square", buffer.width = 1000, max.error = 1
     if(ncol(region) == 2 & nrow(region) >= 1){
       coords <- lapply(1:nrow(region),function(x)cbind(region[,1],region[,2])[x,])
       if(nrow(region) == 1){
-        roi <- ee$Geometry$Point(coords[[1]])$buffer(buffer.width,max.error)$bounds()
+        if(shape == "circle"){
+          roi <- ee$Geometry$Point(coords[[1]])$buffer(buffer.width,max.error)
+        }else{
+          roi <- ee$Geometry$Point(coords[[1]])$buffer(buffer.width,max.error)$bounds()
+        }
       }else if(nrow(region) > 1){
         roi <- ee$Geometry$MultiPoint(coords)$buffer(buffer.width,max.error)$bounds()
         if(buffer.width > 0){
@@ -72,14 +76,14 @@ get_gee <- function(region, shape = "square", buffer.width = 1000, max.error = 1
   # Convert to arrays
   lats <- np$array((ee$Array(latlng$get("latitude"))$getInfo()))
   lngs <- np$array((ee$Array(latlng$get("longitude"))$getInfo()))
-  elevations <- np$array((ee$Array(latlng$get("elevation"))$getInfo()))
+  elevs <- np$array((ee$Array(latlng$get("elevation"))$getInfo()))
   
   red <- np$array((ee$Array(latlng$get("red"))$getInfo()))
   green <- np$array((ee$Array(latlng$get("green"))$getInfo()))
   blue <- np$array((ee$Array(latlng$get("blue"))$getInfo()))
   
   # Convert to elevation raster
-  elevation <- data.frame(x = lngs, y = lats, elevation = elevations)
+  elevation <- data.frame(x = lngs, y = lats, elevation = elevs)
   rasterElev <- raster::rasterFromXYZ(elevation,crs="+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
   
   # Convert landsat to rasterBrick
