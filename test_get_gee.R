@@ -1,13 +1,14 @@
-################
-### TEST GEE ###
-################
-
+# Load libraries
 library(reticulate)
 use_condaenv('gee_interface', conda = "auto", required = TRUE) # point reticulate to the conda environment created in GEE_setup.sh
 ee <- import("ee")          # Import the Earth Engine library
 ee$Initialize()             # Trigger the authentication
 np <- import("numpy")       # Import Numpy        needed for converting gee raster to R raster object
 pd <- import("pandas")      # Import Pandas       ditto the above
+
+################
+### TEST GEE ###
+################
 
 ###### TEST REGION TYPES
 # vector of 1 points
