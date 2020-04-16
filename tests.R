@@ -75,17 +75,25 @@ prepRes2 <- prep_rasters(rasterElev = testHansen$rasterElev, rasterRGB = testHan
 
 # Different projections
 region <- data.frame(cbind(6.224986,58.986239))
-testALOS <- get_gee(region = region,buffer.width=5000,shape="circle")
+testALOS <- get_gee(region = region,buffer.width=10000,shape="circle")
 testALOS[[1]] <- raster::projectRaster(testALOS[[1]],crs="+init=epsg:32632",res=20)
 testALOS[[2]] <- raster::projectRaster(testALOS[[2]],crs="+init=epsg:3857",res = 30)
 prepProj3 <- prep_rasters(testALOS$rasterElev,testALOS$rasterRGB)
+
+# Labels
+region <- data.frame(cbind(6.224986,58.986239))
+labels <- data.frame(cbind(c(58.8,58.9,59),c(6.2,6.25,6.3)),row.names=c("CC","RA","PP"))
+labels2 <- sp::SpatialPoints(labels,proj4string=sp::CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+testALOS <- get_gee(region = region,buffer.width=5000,shape="square")
+prepLabs1 <- prep_rasters(testALOS$rasterElev,testALOS$rasterRGB,labels=labels)
+prepLabs2 <- prep_rasters(testALOS$rasterElev,testALOS$rasterRGB,labels=labels2)
 
 ######################
 ### TEST Rayshader ###
 ######################
 library(rayshader)
 
-testprep <- prepProj3
+testprep <- extProj2
 zscale <- 30.922080775909325
 #zscale <- 500
 heightmap <- testprep$elevation_m

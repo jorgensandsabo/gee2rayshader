@@ -5,12 +5,15 @@
 
 ########## rasterElev should be a one-band RasterLayer of elevation values
 ########## rasterRGB should be a three-band RasterBrick or RasterStack of RGB values
-########## labels should be a spatialPoints object or a ???. Labels included as rownames or ??? will be retained
+########## labels should be a spatialPoints object or a 2-entry vector or a 2-column matrix or dataframe
+
+### Add scaling of RGB rasters?
+
 prep_rasters <- function(rasterElev, rasterRGB, labels = NULL,
                          projection = "albersequalarea", resolution = 30.922080775909325,
                          lightness = 1, stretch.method = "lin", stretch.quantiles = c(0.02,0.98)){
 
-  # Change visuals of RGB raster (light + stretch) ## ADD SCALING
+  # Change visuals of RGB raster (light + stretch)
   raster::values(rasterRGB) <- raster::values(rasterRGB)^(1/lightness)
   
   if(stretch.method %in% c("lin","hist","log","sqrt")){
@@ -19,10 +22,22 @@ prep_rasters <- function(rasterElev, rasterRGB, labels = NULL,
     }
   }
   
+  # Labels to SpatialPoints
+  if(is.null(labels)){
+    lab_m <- NULL
+  }else if(class(labels) == "SpatialPoints"){
+    lpts <- labels
+  }else if(is.vector(labels) & length(labels) == 2){
+    lpts <- sp::SpatialPoints(cbind(labels[1],labels[2]),proj4string=sp::CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+  }else if(is.matrix(labels) | is.data.frame(labels)){
+    lpts <- sp::SpatialPoints(labels,proj4string=sp::CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+  }else{
+    stop("Labels must be a 2-entry vector or 2-column matrix or data frame or sp::spatialPoints object. Use NULL for no labels.")
+  }
+  
   # Choose projection
   if(!is.na(projection)){
     if(projection == "albersequalarea"){
-      print("reprojecting rasters to albers equal area, centered on mean latitude of rasterElev")
       WSG84extent <- raster::extent(raster::projectRaster(testALOS[[1]],crs="+init=epsg:4326"))
       avglat <- mean(c(WSG84extent[4],WSG84extent[3]))
       proj <- raster::crs(paste("+proj=aea +lat_1=",avglat[1]-1," +lat_2=",avglat[1]+1,sep=""))
@@ -32,47 +47,40 @@ prep_rasters <- function(rasterElev, rasterRGB, labels = NULL,
     }else{
       stop("Projection must be NA to reproject rgb/labels to RGB layer, or a character string describing a projection and datum on the PROJ.4 format (see ?raster::crs), or the character string albersequalarea")
     }
-  }else if(is.na(projection)){
-    print("No projection provided: reprojecting dem and labels the projection of RGB layer")
   }
-  
-  # Labels
-  if(is.null(labels)){
-    lab_m <- NULL
-  }else if(NULL){
-    lpts <- labels
-    lpts_df <- data.frame(lpts)
-  }else if(is.vector(labels)){
-    #lpts <- sp::SpatialPoints(cbind(lab_longs,lab_lats),proj4string=sp::CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
-    lpts_df <- data.frame(lpts)
-  }else if(is.matrix(labels)){
-    lpts <- NA
-    lpts_df <- data.frame(lpts)
-  }else if(is.data.frame(labels)){
-    lpts <- NA
-    lpts_df <- data.frame(lpts)
-  }else{
-    stop("Labels must be ???. Use NULL for no labels.")
-  }
-  
+
   # Reproject to a common projection
   if(is.na(projection)){
+    print("No projection provided: reprojecting dem and labels the projection of RGB layer")
     rasterElev <- raster::projectRaster(from = rasterElev,to = rasterRGB)
-    
     if(!(is.null(labels))){
-      lpts_reproj <- sp::spTransform(from = lpts, to = rasterRGB)
-      lpts <- data.frame(lpts_reproj,row.names = lab_names)
+      lpts_reproj <- sp::spTransform(lpts, proj)
+      lpts <- data.frame(lpts_reproj,row.names = row.names(lpts))
     }
-    
   }else{
+    if(projection == "albersequalarea"){
+      print(paste("reprojecting rasters to albers equal area, centered on mean latitude of rasterElev (",proj,")",sep=""))
+    }else{
+      print(paste("reprojecting to ",proj,sep=""))
+    }
     rasterRGB <- raster::projectRaster(rasterRGB,crs = proj,res = resolution)
     rasterElev <- raster::projectRaster(from = rasterElev,to = rasterRGB)
     
     if(!(is.null(labels))){
-      lpts_reproj <- sp::spTransform(from = lpts,to = rasterRGB)
-      lpts_df <- data.frame(lpts_reproj,row.names = lab_names)
+      lpts_reproj <- sp::spTransform(lpts, proj)
+      lpts_df <- data.frame(lpts_reproj,row.names = row.names(lpts))
     }
   }
+  
+  # Remove non-overlapping values between rasters
+  rasterRGB_NA <- rasterRGB ; rasterRGB_NA[which(raster::values(!is.na(rasterRGB_NA)))] <- 1
+  rasterElev_NA <- rasterElev ; rasterElev_NA[which(raster::values(!is.na(rasterElev_NA)))] <- 1
+  rElev <- rasterElev * rasterRGB_NA[[1]] ; names(rElev) <- "elevation"
+  rRGB <- rasterRGB * rasterElev_NA ; names(rRGB) <- c("red","green","blue")
+  
+  # Trim rasters to same extent
+  rasterElev <- raster::trim(rElev)
+  rasterRGB <- raster::trim(rRGB)
   
   # Convert to matrices
   elevation_m = rayshader::raster_to_matrix(rasterElev$elevation)
