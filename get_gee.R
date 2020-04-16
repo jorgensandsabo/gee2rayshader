@@ -1,4 +1,5 @@
 #### Function to download elevation and cloud-reduced median landsat imagery for a region of interest
+# JS test change to commit
 
 #### Accepts vector/matrix/dataframe of single point coordinates, matrix/dataframe of multiple coordinates or a raster::extent object
 #### Square/circle around single point
