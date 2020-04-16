@@ -39,4 +39,4 @@ vignettes/*.pdf
 .Renviron
 
 # Additional for this project
-test.R
+tests.R
