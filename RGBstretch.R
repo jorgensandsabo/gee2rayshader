@@ -13,7 +13,7 @@ RGBstretch <- function (x, method = "lin", quantiles = c(0.02,0.98), band = NULL
     temp[temp < 0] <- 0
     temp[temp > 1] <- 1
     return(temp)
-  } 
+  }
   
   if(method == "hist"){
     ecdfun <- ecdf(x)

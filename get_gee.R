@@ -10,7 +10,8 @@
 
 get_gee <- function(region, shape = "square", buffer.width = 1000, max.error = 1, scale = 30.922080775909325, max.pixels = 1e20,
                     dem = "JAXA/ALOS/AW3D30/V2_2", dem.band = "AVE_DSM", demfunc = NULL, demtype = "image",
-                    rgb = "LANDSAT/LC08/C01/T1", red.band = "B4", green.band = "B3", blue.band = "B2", rgbfunc = landsatCF, rgbtype = "imagecollection"){
+                    rgb = "LANDSAT/LC08/C01/T1", red.band = "B4", green.band = "B3", blue.band = "B2", rgbfunc = landsatCF, rgbtype = "imagecollection",
+                    ...){
 
   # Get geometry of region of interest
   if(is.vector(region) & length(region) == 2){
@@ -60,7 +61,7 @@ get_gee <- function(region, shape = "square", buffer.width = 1000, max.error = 1
   if(rgbtype == "imagecollection"){
     RGB_full <- ee$ImageCollection(rgb)
     if(!is.null(rgbfunc)){
-      RGB_full <- rgbfunc(RGB_full)
+      RGB_full <- rgbfunc(RGB_full, ...)
     }
   }else if(rgbtype == "image"){
     RGB_full <- ee$Image(rgb)
