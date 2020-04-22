@@ -8,7 +8,7 @@
 #### Downloads AW3D30v2.2 elevation data by default
 #### Downloads landsat imagery cloud-reduced using the simplecomposite function (percentile: 30, cloudScoreRange: 1) by default
 
-get_gee <- function(region, shape = "square", buffer.width = 1000, max.error = 1, scale = 30.922080775909325, max.pixels = 1e20,
+get_gee <- function(region, shape = "square", buffer.width = 1000, max.error = 1, scale = 30, max.pixels = 1e20,
                     dem = "JAXA/ALOS/AW3D30/V2_2", dem.band = "AVE_DSM", demfunc = NULL, demtype = "image",
                     rgb = "LANDSAT/LC08/C01/T1", red.band = "B4", green.band = "B3", blue.band = "B2", rgbfunc = landsatCF, rgbtype = "imagecollection",
                     ...){

@@ -10,7 +10,7 @@
 ### Add scaling of RGB rasters?
 
 prep_rasters <- function(rasterElev, rasterRGB, labels = NULL,
-                         projection = "albersequalarea", resolution = 30.922080775909325,
+                         projection = "albersequalarea", resolution = 30,
                          lightness = 1, stretch.method = "lin", stretch.quantiles = c(0.02,0.98)){
 
   # Change visuals of RGB raster (light + stretch)
@@ -34,11 +34,11 @@ prep_rasters <- function(rasterElev, rasterRGB, labels = NULL,
   }else{
     stop("Labels must be a 2-entry vector or 2-column matrix or data frame or sp::spatialPoints object. Use NULL for no labels.")
   }
-  
+
   # Choose projection
   if(!is.na(projection)){
     if(projection == "albersequalarea"){
-      WSG84extent <- raster::extent(raster::projectRaster(testALOS[[1]],crs="+init=epsg:4326"))
+      WSG84extent <- raster::extent(raster::projectRaster(rasterElev[[1]],crs="+init=epsg:4326"))
       avglat <- mean(c(WSG84extent[4],WSG84extent[3]))
       proj <- raster::crs(paste("+proj=aea +lat_1=",avglat[1]-1," +lat_2=",avglat[1]+1,sep=""))
     }else if(class(raster::crs(projection)) == "CRS"){
